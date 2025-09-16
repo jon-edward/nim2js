@@ -43,6 +43,8 @@ proc nim2js*(nimCode: cstring): cstring {.exportc.} =
 
   const inputFile = "input.nim"
   const outputFile = "output.js"
+
+  echo $nimCode
   
   writeFile(inputFile, $nimCode)
 
