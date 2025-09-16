@@ -1,0 +1,26 @@
+{
+  "name": "nim2js",
+  "version": "1.0.0",
+  "description": "Compile Nim source code to JS in the browser.",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build-release",
+    "build-dev": "nim c -d:emscripten -d:debug nim/nim2js.nim ",
+    "build-release": "nim c -d:emscripten -d:release nim/nim2js.nim ",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jon-edward/nim2js.git"
+  },
+  "keywords": [
+    "Nim",
+    "WASM"
+  ],
+  "author": "jon-edward",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/jon-edward/nim2js/issues"
+  },
+  "homepage": "https://github.com/jon-edward/nim2js#readme"
+}
