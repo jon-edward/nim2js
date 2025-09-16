@@ -7,7 +7,8 @@
     "build": "npm run build-release",
     "build-dev": "nim c -d:emscripten -d:debug nim/nim2js.nim",
     "build-release": "nim c -d:emscripten -d:release nim/nim2js.nim",
-    "dev": "copyfiles -u 1 ./public/**/* ./dist/ && copyfiles -u 1 ./pkg/**/* ./dist/ && serve ./dist",
+    "site": "copyfiles -u 1 ./public/**/* ./dist/ && copyfiles -u 1 ./pkg/**/* ./dist/",
+    "dev": "npm run site && serve ./dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
