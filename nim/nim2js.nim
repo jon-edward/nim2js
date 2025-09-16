@@ -1,8 +1,9 @@
 import os
-import compiler/[options, idents, pathutils, modulegraphs, pipelines, platform]
-import std/symlinks
+import compiler/[options, idents, pathutils, modulegraphs, pipelines, platform, condsyms]
 
 when defined(emscripten):
+    import std/symlinks
+
     # Needed for the Nim compiler to work on the "linux" target that emscripten pretends to be.
     createSymlink("/proc/self/exe", "/proc/self/exe")
 
@@ -28,6 +29,8 @@ proc compileNimToJS(sourceFile: string, outFile: string) =
 
     conf.cmd = cmdCompileToJS
     conf.searchPaths.add(libPath)
+    
+    initDefines(conf.symbols)
 
     let cache = newIdentCache()
     let graph = newModuleGraph(cache, conf)
