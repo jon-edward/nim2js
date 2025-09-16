@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Nim2JS Test Page</title>
+    <title>Nim2JS Browser Test</title>
     <style>
       body {
         font-family: sans-serif;
@@ -31,10 +31,22 @@
         font-family: monospace;
       }
     </style>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="nim-codemirror.js"></script>
   </head>
   <body>
     <h1>Nim2JS Browser Test</h1>
-    <p>Write Nim code below and click "Compile".</p>
+    <p>
+      Write Nim code below and click "Compile". See the source code at
+      <a href="https://github.com/jon-edward/nim2js"
+        >https://github.com/jon-edward/nim2js</a
+      >.
+    </p>
     <textarea id="nimSrc">echo "Hello from Nim!"</textarea>
     <br />
     <button id="runBtn">Compile</button>
@@ -50,6 +62,24 @@
     <pre id="runtimeConsole"></pre>
     <script src="nim2js.js"></script>
     <script>
+      // Initialize CodeMirror on the textarea.
+      const editorSrc = CodeMirror.fromTextArea(
+        document.getElementById("nimSrc"),
+        {
+          lineNumbers: true,
+          mode: "nim",
+          theme: "default",
+          tabSize: 2,
+        }
+      );
+
+      const readOnlyJs = CodeMirror(document.getElementById("output"), {
+        theme: "default",
+        mode: "javascript",
+        lineNumbers: true,
+        readOnly: true, // This makes the editor uneditable
+      });
+
       function nim2js(nimCode) {
         if (typeof Module === "undefined") {
           return "Error: Nim2JS module not loaded.";
@@ -59,12 +89,12 @@
 
       document.getElementById("runBtn").addEventListener("click", () => {
         const output = document.getElementById("output");
-        output.textContent = nim2js(document.getElementById("nimSrc").value);
+        readOnlyJs.setValue(nim2js(editorSrc.getValue()));
       });
 
       // Copy output to clipboard with navigator API and fallback
       async function copyOutput() {
-        const text = document.getElementById("output").textContent || "";
+        const text = readOnlyJs.getValue() || "";
         if (!text) return alert("Nothing to copy.");
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -92,9 +122,8 @@
 
       // Execute the JavaScript shown in the `#output` element and capture console output.
       function runOutputJS() {
-        const outputEl = document.getElementById("output");
         const consoleEl = document.getElementById("runtimeConsole");
-        const code = outputEl.textContent || "";
+        const code = readOnlyJs.getValue() || "";
         consoleEl.textContent = "";
         if (!code.trim()) {
           consoleEl.textContent = "No JavaScript found in output.";
