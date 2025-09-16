@@ -37,10 +37,12 @@ if defined(emscripten):
 
     let embeddedLibPath = joinPath(compilerRootPath, "lib") & "@/lib"
 
-    mkDir("dist")
+    mkDir("pkg")
 
-    switch("passL", "-o ./dist/index.js")
-    switch("passL", "-sEXPORTED_FUNCTIONS=['_nim2js']")
+    switch("passL", "-o ./pkg/nim2js.js")
+    switch("passL", "-sEXPORTED_FUNCTIONS=['_nim2js','_main']")
+    switch("passL", "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']")
+    switch("passL", "-sTOTAL_STACK=128MB -sTOTAL_MEMORY=256MB")
     switch("passL", "--preload-file " & embeddedLibPath)
 
     when defined(release):

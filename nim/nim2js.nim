@@ -1,8 +1,9 @@
 import os
 import compiler/[options, idents, pathutils, modulegraphs, pipelines, platform]
+import std/symlinks
 
 when defined(emscripten):
-    import symlinks
+    # Needed for the Nim compiler to work on the "linux" target that emscripten pretends to be.
     createSymlink("/proc/self/exe", "/proc/self/exe")
 
 proc compileNimToJS(sourceFile: string, outFile: string) = 
@@ -35,16 +36,15 @@ proc compileNimToJS(sourceFile: string, outFile: string) =
 
     compilePipelineProject(graph)
 
-
-proc nim2js*(nimCode: string): string {.exportc.} = 
+proc nim2js*(nimCode: cstring): cstring {.exportc.} = 
   ## Compile Nim code provided as a string to JavaScript and return the JS code as a string.
   ## This function writes the Nim code to a temporary file, compiles it, and reads back the JS output.
   ## It also ensures cleanup of temporary files in case of compilation failure.
-  
+
   const inputFile = "input.nim"
   const outputFile = "output.js"
   
-  writeFile(inputFile, nimCode)
+  writeFile(inputFile, $nimCode)
 
   try:
     compileNimToJS(inputFile, outputFile)
@@ -54,4 +54,4 @@ proc nim2js*(nimCode: string): string {.exportc.} =
     removeFile(inputFile)
     raise
   
-  return readFile(outputFile)
+  return readFile(outputFile).cstring
