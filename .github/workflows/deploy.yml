@@ -35,10 +35,22 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+      - name: Clone and activate Emscripten
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+      - name: Set up Nim
+        uses: jiro4989/setup-nim-action@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install dependencies
         run: npm install
       - name: Build
         run: |
+          source ./emsdk/emsdk_env.sh
+          npm run build
           npm run site
       - name: Setup Pages
         uses: actions/configure-pages@v4

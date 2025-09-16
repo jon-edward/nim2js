@@ -6,8 +6,6 @@ Emscripten-built Nim compiler internals.
 ## Repository layout
 
 - `nim/` - Nim sources (`nim2js.nim`).
-- `pkg/` - Emscripten build outputs: `nim2js.js`, `nim2js.wasm`, and
-  `nim2js.data` (preloaded Nim stdlib for in-browser compilation).
 - `public/` - Minimal demo site (`index.html`) showing usage.
 - `package.json` - npm helper scripts to build and run the demo.
 
@@ -15,8 +13,7 @@ Emscripten-built Nim compiler internals.
 
 ### Prerequisites
 
-- Emscripten SDK and Nim compiler configured if you plan to rebuild the `pkg/` artifacts from
-  source (the included `pkg/` artifacts can be used without rebuilding).
+- Emscripten SDK and Nim compiler configured to build the WASM and JS artifacts.
 - Node.js and `npm` for running the demo server and helper scripts.
 
 ### Install dependencies

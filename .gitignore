@@ -3,3 +3,4 @@ nimblecache/
 htmldocs/
 node_modules/
 dist/
+pkg/
