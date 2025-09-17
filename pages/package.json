@@ -1,0 +1,16 @@
+{
+  "name": "pages",
+  "version": "1.0.0",
+  "description": "The test webpage for the Nim2Js npm module.",
+  "main": "index.html",
+  "scripts": {
+    "build": "copyfiles -u 1 ./public/**/* ./dist/ && copyfiles -u 1 ../pkg/**/* ./dist/ && copyfiles -u 1 ../index.js ./dist/",
+    "dev": "npm run build && serve ./dist"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "serve": "^14.2.5"
+  }
+}

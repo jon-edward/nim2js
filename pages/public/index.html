@@ -60,8 +60,10 @@
     <pre id="output"></pre>
     <h2>Runtime Console</h2>
     <pre id="runtimeConsole"></pre>
-    <script src="nim2js.js"></script>
-    <script>
+    <script src="index.js" type="module"></script>
+    <script type="module">
+      import loadNim2Js from "./index.js";
+
       // Initialize CodeMirror on the textarea.
       const editorSrc = CodeMirror.fromTextArea(
         document.getElementById("nimSrc"),
@@ -72,6 +74,8 @@
           tabSize: 2,
         }
       );
+
+      const nim2jsModulePromise = loadNim2Js();
 
       const readOnlyJs = CodeMirror(document.getElementById("output"), {
         theme: "default",
@@ -87,9 +91,11 @@
         return Module.ccall("nim2js", "string", ["string"], [nimCode]);
       }
 
-      document.getElementById("runBtn").addEventListener("click", () => {
+      document.getElementById("runBtn").addEventListener("click", async () => {
         const output = document.getElementById("output");
-        readOnlyJs.setValue(nim2js(editorSrc.getValue()));
+        readOnlyJs.setValue(
+          (await nim2jsModulePromise).nim2js(editorSrc.getValue())
+        );
       });
 
       // Copy output to clipboard with navigator API and fallback

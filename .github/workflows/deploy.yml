@@ -51,14 +51,15 @@ jobs:
         run: |
           source ./emsdk/emsdk_env.sh
           npm run build
-          npm run site
+      - name: Create Pages site
+        run: |
+          (cd pages && npm install && npm run build)
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload dist folder
-          path: "./dist"
+          path: "./pages/dist"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

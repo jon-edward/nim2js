@@ -40,12 +40,18 @@ if defined(emscripten):
     mkDir("pkg")
 
     switch("passL", "-o ./pkg/nim2js.js")
-    switch("passL", "-sEXPORTED_FUNCTIONS=['_nim2js','_main']")
-    switch("passL", "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']")
-    switch("passL", "-sTOTAL_STACK=128MB -sTOTAL_MEMORY=256MB")
-    switch("passL", "--preload-file " & embeddedLibPath)
+    switch("passL", "-s MODULARIZE=1 -s EXPORT_ES6=1")
+    switch("passL", "-s EXPORT_NAME='__Nim2JsFactory'")
+    switch("passL", "-s EXPORTED_FUNCTIONS=['_nim2js','_main']")
+    switch("passL", "-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']")
+    switch("passL", "-s TOTAL_STACK=128MB -s TOTAL_MEMORY=256MB")
+    switch("passL", "--embed-file " & embeddedLibPath)
 
     when defined(release):
+        # Turn off checks and optimize for size in release mode
+        --opt:size
+        --checks:off
+        --debugger:off
         switch("passL", "-O3 -g0")
     when defined(debug):
-        switch("passL", "-O0 -g ")
+        switch("passL", "-O0 -g")
