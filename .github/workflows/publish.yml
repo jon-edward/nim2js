@@ -15,6 +15,7 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+          registry-url: "https://registry.npmjs.org"
       - name: Clone and activate Emscripten
         run: |
           git clone https://github.com/emscripten-core/emsdk.git
