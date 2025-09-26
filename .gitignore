@@ -5,3 +5,12 @@ node_modules/
 pages/dist/*
 !pages/dist/.nojekyll
 pkg/*
+
+*_linkerArgs.txt
+
+index.*
+!index.ts
+
+demo.*
+!demo.ts
+!demo.html

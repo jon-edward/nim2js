@@ -31,20 +31,24 @@ if defined(emscripten):
 
     --listCmd # List what commands we are running so that we can debug them.
 
-    --gc:arc # GC:arc is friendlier with crazy platforms.
+    --gc:orc
     --exceptions:goto # Goto exceptions are friendlier with crazy platforms.
     --define:noSignalHandler # Emscripten doesn't support signal handlers.
 
-    let embeddedLibPath = joinPath(compilerRootPath, "lib") & "@/lib"
+    let embeddedLibPath = joinPath(compilerRootPath, "lib") & "@/usr/lib/nim/lib"
 
     mkDir("pkg")
 
     switch("passL", "-o ./pkg/nim2js.js")
     switch("passL", "-s MODULARIZE=1 -s EXPORT_ES6=1")
-    switch("passL", "-s EXPORT_NAME='__Nim2JsFactory'")
-    switch("passL", "-s EXPORTED_FUNCTIONS=['_nim2js','_main']")
-    switch("passL", "-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']")
+    switch("passL", "-s EXPORT_NAME='Nim2JsFactory'")
+    switch("passL", "-s EXPORTED_FUNCTIONS=['_runJsCompiler','_main']")
+    switch("passL", "-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS']")
     switch("passL", "-s TOTAL_STACK=128MB -s TOTAL_MEMORY=256MB")
+    switch("passL", "-s FORCE_FILESYSTEM=1")
+    switch("passL", "-s ALLOW_MEMORY_GROWTH=1")
+    switch("passL", "-s ASSERTIONS=1")
+    switch("passL", "-lembind --emit-tsd nim2js.d.ts")
     switch("passL", "--embed-file " & embeddedLibPath)
 
     when defined(release):

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nim to JavaScript Compiler</title>
+
+    <!-- CodeMirror CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Courier New", monospace;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .container {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        position: relative;
+      }
+
+      .editor-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid #333;
+        min-width: 300px;
+      }
+
+      .output-section {
+        width: 500px;
+        display: flex;
+        flex-direction: column;
+        min-width: 250px;
+      }
+
+      .resize-handle {
+        width: 4px;
+        background-color: #444;
+        cursor: col-resize;
+        user-select: none;
+        border-left: 1px solid #555;
+        border-right: 1px solid #555;
+      }
+
+      .resize-handle:hover {
+        background-color: #666;
+      }
+
+      .header {
+        background-color: #2a2a2a;
+        padding: 8px 16px;
+        border-bottom: 1px solid #333;
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      .editor-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      /* CodeMirror customization */
+      .CodeMirror {
+        flex: 1;
+        height: auto;
+        font-family: "Fira Code", "Consolas", "Monaco", "Courier New", monospace;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .CodeMirror-focused .CodeMirror-cursor {
+        border-left: 2px solid #f8f8f2;
+      }
+
+      .CodeMirror-selected {
+        background: #49483e !important;
+      }
+
+      .CodeMirror-line::selection,
+      .CodeMirror-line > span::selection,
+      .CodeMirror-line > span > span::selection {
+        background: rgba(73, 72, 62, 0.99);
+      }
+
+      .CodeMirror-line::-moz-selection,
+      .CodeMirror-line > span::-moz-selection,
+      .CodeMirror-line > span > span::-moz-selection {
+        background: rgba(73, 72, 62, 0.99);
+      }
+
+      .terminal {
+        flex: 1;
+        background-color: #000;
+        color: #e0e0e0;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        padding: 16px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .controls {
+        background-color: #2a2a2a;
+        padding: 12px 16px;
+        border-bottom: 1px solid #333;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      button {
+        background-color: #4a4a4a;
+        color: #e0e0e0;
+        border: 1px solid #666;
+        padding: 8px 16px;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: background-color 0.2s;
+      }
+
+      button:hover:not(:disabled) {
+        background-color: #5a5a5a;
+      }
+
+      button:disabled {
+        background-color: #2a2a2a;
+        color: #666;
+        cursor: not-allowed;
+      }
+
+      .error {
+        color: #ff6b6b;
+      }
+
+      .success {
+        color: #51cf66;
+      }
+
+      .info {
+        color: #74c0fc;
+      }
+
+      .status {
+        margin-left: auto;
+        color: #999;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #666;
+        transition: background-color 0.3s;
+      }
+
+      .status-indicator.ready {
+        background-color: #51cf66;
+      }
+
+      .status-indicator.error {
+        background-color: #ff6b6b;
+      }
+
+      .status-indicator.loading {
+        background-color: #74c0fc;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .output-section.collapsed .header,
+      .output-section.collapsed .terminal {
+        display: none;
+      }
+
+      .output-section.collapsed .collapse-btn {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      /* Scrollbar styling for terminal */
+      .terminal::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .terminal::-webkit-scrollbar-track {
+        background: #1a1a1a;
+      }
+
+      .terminal::-webkit-scrollbar-thumb {
+        background: #4a4a4a;
+        border-radius: 4px;
+      }
+
+      .terminal::-webkit-scrollbar-thumb:hover {
+        background: #5a5a5a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="editor-section">
+        <div class="header">Nim Source Code</div>
+        <div class="controls">
+          <button id="compileAndRunBtn" disabled>Compile and Run</button>
+          <button id="clearBtn">Clear Output</button>
+          <div class="status" id="status">
+            <div class="status-indicator loading" id="statusIndicator"></div>
+            <span>Loading compiler...</span>
+          </div>
+        </div>
+        <div class="editor-container">
+          <textarea id="editor" style="display: none">
+echo "Hello from Nim!"
+
+proc fibonacci(n: int): int =
+  if n <= 1:
+    return n
+  else:
+    return fibonacci(n-1) + fibonacci(n-2)
+
+for i in 0..10:
+  echo "fibonacci(", i, ") = ", fibonacci(i)</textarea
+          >
+        </div>
+      </div>
+
+      <div class="resize-handle" id="resizeHandle"></div>
+
+      <div class="output-section" id="outputSection">
+        <div class="header">Terminal Output</div>
+        <div class="terminal" id="terminal">
+          Initializing Nim to JavaScript compiler...<br />
+        </div>
+      </div>
+    </div>
+
+    <!-- CodeMirror JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+    <script src="demo/nim-codemirror.js"></script>
+
+    <script type="module">
+      import loadNim2JS from "./index.js";
+
+      // Resizable terminal functionality
+      const resizeHandle = document.getElementById("resizeHandle");
+      const outputSection = document.getElementById("outputSection");
+      let isResizing = false;
+
+      resizeHandle.addEventListener("mousedown", (e) => {
+        isResizing = true;
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none"; // Prevent text selection while dragging
+        document.addEventListener("mousemove", handleResize);
+        document.addEventListener("mouseup", stopResize);
+        e.preventDefault(); // Prevent default drag behavior
+      });
+
+      function handleResize(e) {
+        if (!isResizing) return;
+
+        const containerRect = document
+          .querySelector(".container")
+          .getBoundingClientRect();
+        const newWidth = containerRect.right - e.clientX - 4; // Account for handle width
+        const minWidth = 250;
+        const maxWidth = containerRect.width - 300; // Leave at least 300px for editor
+
+        const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+        outputSection.style.width = clampedWidth + "px";
+
+        // Refresh CodeMirror to handle potential size changes
+        editor.refresh();
+      }
+
+      function stopResize() {
+        isResizing = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        document.removeEventListener("mousemove", handleResize);
+        document.removeEventListener("mouseup", stopResize);
+      }
+
+      // Initialize CodeMirror editor
+      const editor = CodeMirror.fromTextArea(
+        document.getElementById("editor"),
+        {
+          mode: "nim",
+          theme: "monokai",
+          lineNumbers: true,
+          lineWrapping: true,
+          autoCloseBrackets: true,
+          matchBrackets: true,
+          styleActiveLine: true,
+          indentUnit: 2,
+          tabSize: 2,
+          indentWithTabs: false,
+          extraKeys: {
+            "Ctrl-Enter": function (cm) {
+              compileAndRun();
+            },
+            "Ctrl-S": function (cm) {
+              compileAndRun();
+            },
+            "Ctrl-/": "toggleComment",
+            "Ctrl-F": "findPersistent",
+            F11: function (cm) {
+              cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+            },
+            Esc: function (cm) {
+              if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
+            },
+          },
+        }
+      );
+
+      // Terminal management
+      const terminal = document.getElementById("terminal");
+      const status = document.getElementById("status");
+      const statusIndicator = document.getElementById("statusIndicator");
+
+      const ansiCodesPattern =
+        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+
+      function updateStatus(text, state = "ready") {
+        status.querySelector("span").textContent = text;
+        statusIndicator.className = `status-indicator ${state}`;
+      }
+
+      function appendToTerminal(text, className = "") {
+        text = text.replace(ansiCodesPattern, "");
+        const span = document.createElement("span");
+        if (className) span.className = className;
+        span.textContent = text;
+        terminal.appendChild(span);
+        terminal.appendChild(document.createTextNode("\n"));
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+
+      function clearTerminal() {
+        terminal.innerHTML = "";
+      }
+
+      // Compiler initialization
+      let nimCompiler = null;
+      let compiledJS = null;
+
+      async function initializeCompiler() {
+        try {
+          updateStatus("Loading compiler...", "loading");
+
+          nimCompiler = await loadNim2JS({
+            print: (text) => appendToTerminal(text),
+            printErr: (text) => appendToTerminal(text, "error"),
+          });
+
+          appendToTerminal(
+            "Nim to JavaScript compiler loaded successfully.",
+            "success"
+          );
+          setReady();
+        } catch (error) {
+          appendToTerminal(
+            `Failed to load compiler: ${error.message}`,
+            "error"
+          );
+          updateStatus("Error", "error");
+        }
+      }
+
+      function setRunning() {
+        updateStatus("Running...", "loading");
+        document.getElementById("compileAndRunBtn").disabled = true;
+      }
+
+      function setReady() {
+        updateStatus("Ready", "ready");
+        document.getElementById("compileAndRunBtn").disabled = false;
+      }
+
+      // Compilation and execution
+      async function compileAndRun() {
+        setRunning();
+        const source = editor.getValue().trim();
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        if (!source) {
+          appendToTerminal("No source code to compile.", "error");
+          return;
+        }
+
+        if (!nimCompiler) {
+          appendToTerminal("Compiler not loaded.", "error");
+          return;
+        }
+
+        updateStatus("Compiling...", "loading");
+        document.getElementById("compileAndRunBtn").disabled = true;
+
+        const originalLog = console.log;
+        const originalError = console.error;
+
+        try {
+          compiledJS = nimCompiler.nim2js(source);
+
+          console.log = (...args) => {
+            appendToTerminal(args.join(" "));
+            originalLog.apply(console, args);
+          };
+
+          console.error = (...args) => {
+            appendToTerminal(args.join(" "), "error");
+            originalError.apply(console, args);
+          };
+
+          new Function(compiledJS)();
+
+          updateStatus("Ready", "ready");
+        } catch (error) {
+          if (compiledJS === null) {
+            appendToTerminal(`Compilation failed: ${error.message}`, "error");
+          } else {
+            appendToTerminal(`Runtime error: ${error.message}`, "error");
+          }
+          compiledJS = null;
+        } finally {
+          console.log = originalLog;
+          console.error = originalError;
+          setReady();
+        }
+      }
+
+      // Event listeners
+      document
+        .getElementById("compileAndRunBtn")
+        .addEventListener("click", compileAndRun);
+      document
+        .getElementById("clearBtn")
+        .addEventListener("click", clearTerminal);
+
+      // Initialize
+      initializeCompiler();
+    </script>
+  </body>
+</html>

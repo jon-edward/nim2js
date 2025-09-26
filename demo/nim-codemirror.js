@@ -1,18 +1,20 @@
-// Taken from https://github.com/PMunch/nim-playground-frontend/blob/master/codemirror/mode/nim/nim.js
+// Taken from https://www.npmjs.com/package/nim-codemirror-mode
+// CodeMirror mode based on PMunch's https://github.com/PMunch/nim-playground-frontend
 
-CodeMirror.defineMode("nim", function (conf, parserConf) {
-  var ERRORCLASS = "error";
+function nim(conf, parserConf) {
+  let ERRORCLASS = "error";
 
   function wordRegexp(words) {
     return new RegExp("^((" + words.join(")|(") + "))\\b");
   }
 
-  var operators = new RegExp(
+  let operators = new RegExp(
     "\\=\\+\\-\\*\\/\\<\\>\\@\\$\\~\\&\\%\\|\\!\\?\\^\\:\\\\"
   );
-  var identifiers = new RegExp("^[_A-Za-z][_A-Za-z0-9]*");
 
-  var commonkeywords = [
+  let identifiers = new RegExp("^[_A-Za-z][_A-Za-z0-9]*");
+
+  let commonkeywords = [
     "addr",
     "asm",
     "bind",
@@ -70,6 +72,7 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
     "yield",
 
     // keyword operators
+
     "shl",
     "shr",
     "and",
@@ -81,12 +84,11 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
     "is",
     "isnot",
     "in",
-    "notin",
     "as",
     "of",
   ];
 
-  var commonBuiltins = [
+  let commonBuiltins = [
     "int",
     "int8",
     "int16",
@@ -298,6 +300,7 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
     "false",
 
     // exceptions
+
     "Exception",
     "Defect",
     "CatchableError",
@@ -337,25 +340,31 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
   if (parserConf.extra_builtins != undefined)
     commonBuiltins = commonBuiltins.concat(parserConf.extra_builtins);
 
-  var keywords = wordRegexp(commonkeywords);
-  var builtins = wordRegexp(commonBuiltins);
+  let keywords = wordRegexp(commonkeywords);
 
-  var indentInfo = null;
+  let builtins = wordRegexp(commonBuiltins);
 
-  var stringPrefixes = new RegExp("^(('{3}|\"{3}|['\"]))", "i");
+  let indentInfo = null;
+
+  let stringPrefixes = new RegExp("^(('{3}|\"{3}|['\"]))", "i");
 
   // tokenizers
+
   function tokenBase(stream, state) {
     // Handle scope changes
+
     if (stream.sol()) {
-      var scopeOffset = state.scopes[0].offset;
+      let scopeOffset = state.scopes[0].offset;
+
       if (stream.eatSpace()) {
-        var lineOffset = stream.indentation();
+        let lineOffset = stream.indentation();
+
         if (lineOffset > scopeOffset) {
           indentInfo = "indent";
         } else if (lineOffset < scopeOffset) {
           indentInfo = "dedent";
         }
+
         return null;
       } else {
         if (scopeOffset > 0) {
@@ -366,82 +375,110 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
 
     if (stream.eatSpace()) return null;
 
-    var ch = stream.peek();
+    let ch = stream.peek();
 
     // Handle Comments
+
     if (ch === "#") {
       stream.next();
+
       if (stream.eat("[")) {
         state.tokenize = tokenComment;
+
         return tokenComment(stream, state);
       } else {
         stream.skipToEnd();
+
         return "comment";
       }
     }
 
     // Handle Number Literals
+
     if (stream.match(/^[0-9\.]/, false)) {
-      var floatLiteral = false;
+      let floatLiteral = false;
+
       // Floats
+
       if (stream.match(/^\d*\.\d+(e[\+\-]?\d+)?/i)) {
         floatLiteral = true;
       }
+
       if (stream.match(/^\d+\.\d*/)) {
         floatLiteral = true;
       }
+
       if (stream.match(/^\.\d+/)) {
         floatLiteral = true;
       }
+
       if (floatLiteral) {
         // Float literals may be "imaginary"
+
         stream.eat(/J/i);
+
         return "number";
       }
+
       // Integers
-      var intLiteral = false;
+
+      let intLiteral = false;
+
       // Hex
+
       if (stream.match(/^0x[0-9a-f]+/i)) {
         intLiteral = true;
       }
+
       // Binary
+
       if (stream.match(/^0b[01]+/i)) {
         intLiteral = true;
       }
+
       // Octal
+
       if (stream.match(/^0o[0-7]+/i)) {
         intLiteral = true;
       }
+
       // Decimal
+
       if (stream.match(/^[1-9]\d*(e[\+\-]?\d+)?/)) {
         // Decimal literals may be "imaginary"
+
         stream.eat(/J/i);
+
         // TODO - Can you have imaginary longs?
+
         intLiteral = true;
       }
+
       // Zero by itself with no other piece of number.
+
       if (stream.match(/^0(?![\dx])/i)) {
         intLiteral = true;
       }
+
       if (intLiteral) {
         // Integer literals may be "long"
+
         stream.eat(/L/i);
+
         return "number";
       }
     }
 
     // Handle Strings
+
     if (stream.match(stringPrefixes)) {
       state.tokenize = tokenStringFactory(stream.current());
       return state.tokenize(stream, state);
     }
 
     if (stream.match(operators)) return "operator";
-
     if (stream.match(keywords)) return "keyword";
-
     if (stream.match(builtins)) return "builtin";
-
     if (stream.match(identifiers)) {
       if (
         state.lastToken != null &&
@@ -456,29 +493,36 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
     }
 
     // Handle non-detected items
+
     stream.next();
-    return ERRORCLASS;
+
+    return null;
   }
 
   function tokenStringFactory(delimiter) {
-    var singleline = delimiter.length == 1;
-    var OUTCLASS = "string";
+    let singleline = delimiter.length == 1;
+
+    let OUTCLASS = "string";
 
     function tokenString(stream, state) {
       while (!stream.eol()) {
         stream.eatWhile(/[^'"\\]/);
+
         if (stream.eat("\\")) {
           stream.next();
+
           if (singleline && stream.eol()) {
             return OUTCLASS;
           }
         } else if (stream.match(delimiter)) {
           state.tokenize = tokenBase;
+
           return OUTCLASS;
         } else {
           stream.eat(/['"]/);
         }
       }
+
       if (singleline) {
         if (parserConf.singleLineStringErrors) {
           return ERRORCLASS;
@@ -486,22 +530,26 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
           state.tokenize = tokenBase;
         }
       }
+
       return OUTCLASS;
     }
 
     tokenString.isString = true;
+
     return tokenString;
   }
 
   function indent(stream, state, type) {
     type = type || "nim";
-    var indentUnit = 0;
+    let indentUnit = 0;
+
     if (type === "nim") {
       if (state.scopes[0].type !== "nim") {
         state.scopes[0].offset = stream.indentation();
         return;
       }
-      for (var i = 0; i < state.scopes.length; ++i) {
+
+      for (let i = 0; i < state.scopes.length; ++i) {
         if (state.scopes[i].type === "nim") {
           indentUnit = state.scopes[i].offset + conf.indentUnit;
           break;
@@ -519,13 +567,17 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
 
   function dedent(stream, state, type) {
     type = type || "nim";
+
     if (state.scopes.length == 1) return;
+
     if (state.scopes[0].type === "nim") {
-      var _indent = stream.indentation();
-      var _indent_index = -1;
-      for (var i = 0; i < state.scopes.length; ++i) {
+      let _indent = stream.indentation();
+      let _indent_index = -1;
+
+      for (let i = 0; i < state.scopes.length; ++i) {
         if (_indent === state.scopes[i].offset) {
           _indent_index = i;
+
           break;
         }
       }
@@ -551,31 +603,35 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
   }
 
   function tokenComment(stream, state) {
-    var maybeEnd = false,
+    let maybeEnd = false,
       ch;
+
     while ((ch = stream.next())) {
       if (ch == "#" && maybeEnd) {
         state.tokenize = tokenBase;
         break;
       }
+
       maybeEnd = ch == "]";
     }
+
     return "comment";
   }
 
   function tokenLexer(stream, state) {
     indentInfo = null;
-    var style = state.tokenize(stream, state);
-    var current = stream.current();
+    let style = state.tokenize(stream, state);
+    let current = stream.current();
 
     // Handle '.' connected identifiers
     if (current === ".") {
-      style = stream.match(identifiers, false) ? null : ERRORCLASS;
-      if (style === null && state.lastStyle === "meta") {
+      style = null;
+      if (state.lastStyle === "meta") {
         // Apply 'meta' style to '.' connected identifiers when
         // appropriate.
         style = "meta";
       }
+
       return style;
     }
 
@@ -587,6 +643,7 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
     }
 
     // Handle scope changes.
+
     if (
       current.match(/return|break|continue|raise/) ||
       (current === "discard" && stream.eol())
@@ -595,13 +652,13 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
 
     if (current === "lambda" || current === "proc") state.lambda = true;
 
-    var delimiter_index = "[({".indexOf(current);
+    let delimiter_index = "[({".indexOf(current);
 
     if (delimiter_index !== -1) {
       indent(stream, state, "])}".slice(delimiter_index, delimiter_index + 1));
     } else if (
       stream.eol() &&
-      current.match(/\=|\:|import|include|type|const|var|let/)
+      current.match(/\=|\:|import|include|type|const|let|let/)
     ) {
       indent(stream, state);
     }
@@ -613,6 +670,7 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
     }
 
     delimiter_index = "])}".indexOf(current);
+
     if (delimiter_index !== -1) {
       if (dedent(stream, state, current)) {
         return ERRORCLASS;
@@ -627,7 +685,7 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
     return style;
   }
 
-  var external = {
+  let external = {
     startState: function (basecolumn) {
       return {
         tokenize: tokenBase,
@@ -640,15 +698,11 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
     },
 
     token: function (stream, state) {
-      var style = tokenLexer(stream, state);
-
+      let style = tokenLexer(stream, state);
       state.lastStyle = style;
-
-      var current = stream.current();
+      let current = stream.current();
       if (current && style) state.lastToken = current;
-
       if (stream.eol() && state.lambda) state.lambda = false;
-
       return style;
     },
 
@@ -666,6 +720,6 @@ CodeMirror.defineMode("nim", function (conf, parserConf) {
   };
 
   return external;
-});
+}
 
-CodeMirror.defineMIME("text/x-nim", "nim");
+CodeMirror.defineMode("nim", nim);

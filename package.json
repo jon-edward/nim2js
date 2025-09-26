@@ -1,17 +1,22 @@
 {
   "name": "nim2js",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Compile Nim source code to JS in the browser.",
   "main": "index.js",
+  "types": "index.d.ts",
   "files": [
+    "index.js.map",
     "pkg/nim2js.js",
+    "pkg/nim2js.d.ts",
     "pkg/nim2js.wasm"
   ],
   "scripts": {
     "build": "npm run build-release",
-    "build-dev": "nim c -d:emscripten -d:debug nim/nim2js.nim",
-    "build-release": "nim c -d:emscripten -d:release nim/nim2js.nim"
+    "build-dev": "tsc && nim c -d:emscripten -d:debug nim/nim2js.nim",
+    "build-release": "tsc && nim c -d:emscripten -d:release nim/nim2js.nim",
+    "copy-demo": "node ./demo/copy-demo.js",
+    "serve": "tsc && npm run copy-demo && serve . -l 8080"
   },
   "repository": {
     "type": "git",
@@ -26,5 +31,11 @@
   "bugs": {
     "url": "https://github.com/jon-edward/nim2js/issues"
   },
-  "homepage": "https://github.com/jon-edward/nim2js#readme"
+  "homepage": "https://github.com/jon-edward/nim2js#readme",
+  "devDependencies": {
+    "@types/emscripten": "^1.41.2",
+    "@types/node": "^24.5.2",
+    "serve": "^14.2.5",
+    "typescript": "^5.9.2"
+  }
 }

@@ -1,40 +1,22 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
-
+name: Publish Package to npmjs
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# Sets the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow one concurrent deployment
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
+  release:
+    types: [published]
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
+          registry-url: "https://registry.npmjs.org"
       - name: Clone and activate Emscripten
         run: |
           git clone https://github.com/emscripten-core/emsdk.git
@@ -51,15 +33,17 @@ jobs:
         run: |
           source ./emsdk/emsdk_env.sh
           npm run build
-      - name: Create Pages site
+      - run: npm ci
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Generate pages
         run: |
-          (cd pages && npm install && npm run build)
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      - name: Upload artifact
+          npm run copy-demo
+      - name: Upload pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./pages/dist"
+          path: "."
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
