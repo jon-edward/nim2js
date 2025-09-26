@@ -13,8 +13,8 @@
   ],
   "scripts": {
     "build": "npm run build-release",
-    "build-dev": "tsc && nim c -d:emscripten -d:debug nim/nim2js.nim",
-    "build-release": "tsc && nim c -d:emscripten -d:release nim/nim2js.nim",
+    "build-dev": "nim c -d:emscripten -d:debug nim/nim2js.nim && tsc",
+    "build-release": "nim c -d:emscripten -d:release nim/nim2js.nim && tsc",
     "copy-demo": "node ./demo/copy-demo.js",
     "serve": "tsc && npm run copy-demo && serve . -l 8080"
   },
