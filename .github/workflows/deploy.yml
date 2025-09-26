@@ -40,6 +40,10 @@ jobs:
       - name: Generate pages
         run: |
           npm run copy-demo
+      - name: Remove node_modules
+        run: rm -rf node_modules
+      - name: Remove emsdk
+        run: rm -rf emsdk
       - name: Upload pages
         uses: actions/upload-pages-artifact@v3
         with:
